@@ -2,6 +2,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from database import get_db_connection
 from services.sql_builder import build_sql
+from services.sql_builder import build_sql
+from services.validator import validate_sql
+from services.executor import execute_query
+from fastapi import HTTPException
 
 app = FastAPI()
 
@@ -74,6 +78,28 @@ def generate_sql(query: dict):
         return {
             "success": True,
             "sql": sql
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+@app.post("/execute")
+def execute(query: dict):
+    try:
+        # Step 1: Build SQL
+        sql = build_sql(query)
+
+        # Step 2: Validate
+        validate_sql(sql)
+
+        # Step 3: Execute
+        result = execute_query(sql)
+
+        return {
+            "success": True,
+            "sql": sql,
+            "data": result
         }
 
     except Exception as e:
