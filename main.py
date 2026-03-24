@@ -7,6 +7,7 @@ from services.validator import validate_sql
 from services.executor import execute_query
 from fastapi import HTTPException
 from services.ai_service import text_to_json
+from database import fetch_schema
 
 app = FastAPI()
 
@@ -122,25 +123,25 @@ def convert_text(query: dict):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+  
 @app.post("/query")
 def full_query(query: dict):
     try:
         user_text = query.get("query")
 
-        # 1️⃣ Get schema
-        schema = get_schema()["schema"]
+        # ✅ REAL schema
+        schema = fetch_schema()
 
-        # 2️⃣ Convert text → JSON
+        # ✅ TEXT → JSON
         structured_query = text_to_json(user_text, schema)
 
-        # 3️⃣ JSON → SQL
+        # ✅ JSON → SQL
         sql = build_sql(structured_query)
 
-        # 4️⃣ Validate
+        # ✅ VALIDATE
         validate_sql(sql)
 
-        # 5️⃣ Execute
+        # ✅ EXECUTE
         data = execute_query(sql)
 
         return {
@@ -153,6 +154,4 @@ def full_query(query: dict):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
-
     
