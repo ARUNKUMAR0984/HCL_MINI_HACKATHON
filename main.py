@@ -6,6 +6,7 @@ from services.sql_builder import build_sql
 from services.validator import validate_sql
 from services.executor import execute_query
 from fastapi import HTTPException
+from services.ai_service import text_to_json
 
 app = FastAPI()
 
@@ -104,3 +105,54 @@ def execute(query: dict):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/text-to-json")
+def convert_text(query: dict):
+    try:
+        user_query = query.get("query")
+
+        schema = get_schema()["schema"]
+
+        result = text_to_json(user_query, schema)
+
+        return {
+            "success": True,
+            "json": result
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/query")
+def full_query(query: dict):
+    try:
+        user_text = query.get("query")
+
+        # 1️⃣ Get schema
+        schema = get_schema()["schema"]
+
+        # 2️⃣ Convert text → JSON
+        structured_query = text_to_json(user_text, schema)
+
+        # 3️⃣ JSON → SQL
+        sql = build_sql(structured_query)
+
+        # 4️⃣ Validate
+        validate_sql(sql)
+
+        # 5️⃣ Execute
+        data = execute_query(sql)
+
+        return {
+            "success": True,
+            "input": user_text,
+            "json": structured_query,
+            "sql": sql,
+            "data": data
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+    
