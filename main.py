@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from database import get_db_connection
+from services.sql_builder import build_sql
 
 app = FastAPI()
 
@@ -64,3 +65,16 @@ def get_schema():
             status_code=500,
             detail="Error fetching schema"
         )
+    
+@app.post("/build-sql")
+def generate_sql(query: dict):
+    try:
+        sql = build_sql(query)
+
+        return {
+            "success": True,
+            "sql": sql
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
