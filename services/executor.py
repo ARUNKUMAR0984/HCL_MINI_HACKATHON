@@ -6,16 +6,10 @@ def execute_query(sql: str):
 
     cursor.execute(sql)
 
-    # Get column names
     columns = [desc[0] for desc in cursor.description]
-
-    # Fetch data
     rows = cursor.fetchall()
 
-    result = []
-
-    for row in rows:
-        result.append(dict(zip(columns, row)))
+    result = [dict(zip(columns, row)) for row in rows]
 
     cursor.close()
     conn.close()
