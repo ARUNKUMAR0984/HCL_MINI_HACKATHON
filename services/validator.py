@@ -7,4 +7,7 @@ def validate_sql(sql: str):
         if word in sql_lower:
             raise Exception(f"Forbidden operation detected: {word}")
 
+    if ";" in sql:
+        raise Exception("Multiple queries not allowed")
+
     return True
